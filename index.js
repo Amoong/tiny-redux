@@ -3,18 +3,36 @@ import { createStore } from "./redux.js";
 const COUNT = "count";
 const FETCH = "fetch";
 
-function middleware(dispatch, action) {
-  console.log(action);
-}
+const middleware1 = store => dispatch => action => {
+  if (action.type === FETCH) {
+    setTimeout(() => {
+      dispatch({
+        type: "fetch-response",
+        payload: [1, 2, 3],
+      });
+    }, 2000);
+  } else {
+    dispatch(action);
+  }
+};
 
-function updater(state, action) {
+const middleware2 = store => dispatch => action => {
+  console.log("mid 2");
+  dispatch(action);
+};
+
+function reducer(state, action) {
   if (action.type === COUNT) {
     return {
       ...state,
       counter: action.payload.counter,
     };
   }
-  if (action.type === FETCH) {
+  if (action.type === "fetch-response") {
+    return {
+      ...state,
+      response: action.payload,
+    };
   }
   return state;
 }
@@ -30,14 +48,13 @@ function actionCreator(type, payload) {
   };
 }
 
-const store = createStore(updater, middleware);
+const store = createStore(reducer, [middleware1, middleware2]);
 
 store.subscribe(listener);
-
-store.dispatch(actionCreator(COUNT, { counter: 1 }));
 
 function counter(data) {
   store.dispatch(actionCreator(COUNT, data));
 }
 
-counter({ counter: 5 });
+counter({ counter: 1 });
+store.dispatch(actionCreator(FETCH));
